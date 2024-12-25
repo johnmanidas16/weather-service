@@ -1,0 +1,55 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: weather-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/weatherdb
+      auto-index-creation: true
+  webflux:
+    base-path: ""
+    log-request-details: true
+
+weather:
+  api:
+    url: https://api.openweathermap.org
+    app-id: 8c10f53389c19c57eb9a23b4bab057c3
+
+jwt:
+  secret: "dK3yL8xR#mP9$vN2cF5jH1qW4tY7*zE6aB0nM3uQ8sW4pX2vB9yN5mC7kD1fG3hJ5nM8tP4rL6wS9xF2aE4bV7"
+
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+    config-url: /v3/api-docs/swagger-config
+    url: /v3/api-docs
+    disable-swagger-default-url: true
+  webjars:
+    prefix: /webjars
+  use-management-port: false
+
+logging:
+  level:
+    com.weather: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.web: DEBUG
+    reactor.netty.http.server: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+
+server:
+  port: ${PORT:8084}
