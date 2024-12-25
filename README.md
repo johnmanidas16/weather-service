@@ -38,13 +38,33 @@ A reactive Spring WebFlux application that provides weather information based on
 - Protected endpoints requiring authentication
 - User activation/deactivation support
 
-#Error Handling
+## Error Handling
 The application includes comprehensive error handling for:
 - Invalid postal codes
 - Invalid JWT tokens
 - User authentication failures
 - Weather API integration issues
 - Database errors
+
+## Build the project
+mvn clean install
+
+## Run the application
+mvn spring-boot:run
+
+## API Documentation
+- Access Swagger UI at: http://localhost:8084/swagger-ui.html
+
+## Authentication
+- POST /api/auth/register
+- POST /api/auth/login
+- PUT /api/auth/users/{username}/activate
+- PUT /api/auth/users/{username}/deactivate
+
+## Weather Data
+- POST /api/weather/info
+- GET /api/weather/history/postal-code/{postalCode}
+- GET /api/weather/history/user/{username}
 
 ### Application Properties
 Create `application.yml` in `src/main/resources`:
@@ -84,25 +104,5 @@ springdoc:
   webjars:
     prefix: /webjars
   use-management-port: false
-
-# Build the project
-mvn clean install
-
-# Run the application
-mvn spring-boot:run
-
-# API Documentation
-Access Swagger UI at: http://localhost:8084/swagger-ui.html
-
-# Authentication
-POST /api/auth/register
-POST /api/auth/login
-PUT /api/auth/users/{username}/activate
-PUT /api/auth/users/{username}/deactivate
-
-# Weather Data
-POST /api/weather/info
-GET /api/weather/history/postal-code/{postalCode}
-GET /api/weather/history/user/{username}
 
 
