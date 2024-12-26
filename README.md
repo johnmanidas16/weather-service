@@ -114,15 +114,15 @@ mvn clean install
 mvn spring-boot:run
 
 ## Step to run Docker image
-# Build the Docker images
+-- Build the Docker images
 docker-compose build
 
-# Start the services
+-- Start the services
 docker-compose up -d
 
-# Check logs
+-- Check logs
 docker-compose logs -f app
 
-# To stop
+-- To stop
 docker-compose down
 
