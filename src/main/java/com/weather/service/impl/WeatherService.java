@@ -1,9 +1,9 @@
 package com.weather.service.impl;
 
 import com.weather.dto.WeatherRequest;
+import com.weather.dto.WeatherResponse;
 import com.weather.model.WeatherData;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface WeatherService {
@@ -20,12 +20,12 @@ public interface WeatherService {
 	 * @param postalCode
 	 * @return
 	 */
-	Flux<WeatherData> getHistoryByPostalCode(String postalCode);
+	Mono<WeatherResponse> getHistoryByPostalCode(String postalCode);
 
 	/**
 	 * 
 	 * @param username
 	 * @return
 	 */
-	Flux<WeatherData> getHistoryByUsername(String username);
+	Mono<WeatherResponse> getHistoryByUsername(String username);
 }

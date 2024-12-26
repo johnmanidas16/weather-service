@@ -3,6 +3,7 @@ package com.weather.service.impl;
 
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -11,7 +12,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import com.mongodb.MongoException;
 import com.weather.dto.Coordinates;
+import com.weather.dto.WeatherInfo;
 import com.weather.dto.WeatherRequest;
+import com.weather.dto.WeatherResponse;
 import com.weather.exception.DatabaseException;
 import com.weather.exception.ResourceNotFoundException;
 import com.weather.exception.ValidationException;
@@ -24,7 +27,6 @@ import com.weather.webclient.WebClientService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -137,8 +139,13 @@ public class WeatherServiceImpl implements WeatherService {
      * @return A {@link Flux<WeatherData>} emitting historical weather data.
      */
 	@Override
-	public Flux<WeatherData> getHistoryByPostalCode(String postalCode) {
-		return weatherDataRepository.findByPostalCodeOrderByRequestTimeDesc(postalCode);
+	public Mono<WeatherResponse> getHistoryByPostalCode(String postalCode) {
+	    return weatherDataRepository.findByPostalCodeOrderByRequestTimeDesc(postalCode)
+	        .map(this::convertToWeatherInfo)
+	        .collectList()
+	        .map(historyList -> {
+	            return mapWeatherResponse(postalCode, null, historyList);
+	        });
 	}
 
 	/**
@@ -148,7 +155,40 @@ public class WeatherServiceImpl implements WeatherService {
      * @return A {@link Flux<WeatherData>} emitting historical weather data.
      */
 	@Override
-	public Flux<WeatherData> getHistoryByUsername(String username) {
-		return weatherDataRepository.findByUsernameOrderByRequestTimeDesc(username);
+	public Mono<WeatherResponse> getHistoryByUsername(String username) {
+		return weatherDataRepository.findByUsernameOrderByRequestTimeDesc(username)
+				.map(this::convertToWeatherInfo)
+				.collectList().map(historyList -> {
+					return mapWeatherResponse(null ,username, historyList);
+				});
+	}
+
+	private WeatherResponse mapWeatherResponse(String postalCode, String username, List<WeatherInfo> historyList) {
+		WeatherResponse response = new WeatherResponse();
+		response.setPostalCode(postalCode);
+		response.setUsername(username);
+		response.setTimestamp(LocalDateTime.now());
+
+		if (!historyList.isEmpty()) {
+			WeatherInfo currentInfo = historyList.get(0);
+			response.setCurrent(currentInfo);
+			response.setUsername(currentInfo.getUsername());
+		}
+		response.setHistory(historyList);
+		return response;
+	}
+
+	private WeatherInfo convertToWeatherInfo(WeatherData weatherData) {
+		return WeatherInfo.builder()
+				.timestamp(weatherData.getRequestTime())
+				.temperature(weatherData.getMain().getTemp())
+				.feelsLike(weatherData.getMain().getFeelsLike())
+				.humidity(weatherData.getMain().getHumidity())
+				.description(weatherData.getWeather().get(0).getDescription())
+				.windSpeed(weatherData.getWind().getSpeed())
+				.conditions(weatherData.getWeather().get(0).getMain())
+				.username(weatherData.getUsername())
+				.postalCode(weatherData.getPostalCode())
+				.build();
 	}
 }

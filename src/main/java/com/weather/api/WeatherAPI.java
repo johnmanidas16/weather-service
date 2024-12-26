@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.weather.dto.WeatherRequest;
+import com.weather.dto.WeatherResponse;
 import com.weather.model.WeatherData;
 import com.weather.service.impl.WeatherService;
 
@@ -73,9 +74,8 @@ public class WeatherAPI {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
 	@GetMapping("/history/postal-code/{postalCode}")
-	public Mono<ResponseEntity<Flux<WeatherData>>> getHistoryByPostalCode(@PathVariable String postalCode) {
-		Flux<WeatherData> weatherDataFlux = weatherService.getHistoryByPostalCode(postalCode);
-		return Mono.just(ResponseEntity.ok().body(weatherDataFlux));
+	public Mono<ResponseEntity<WeatherResponse>> getHistoryByPostalCode(@PathVariable String postalCode) {
+		return weatherService.getHistoryByPostalCode(postalCode).map(ResponseEntity::ok);
 	}
 
     /**
@@ -94,8 +94,7 @@ public class WeatherAPI {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
 	@GetMapping("/history/user/{username}")
-	public Mono<ResponseEntity<Flux<WeatherData>>> getHistoryByUsername(@PathVariable String username) {
-		Flux<WeatherData> weatherDataFlux = weatherService.getHistoryByUsername(username);
-		return Mono.just(ResponseEntity.ok().body(weatherDataFlux));
+	public Mono<ResponseEntity<WeatherResponse>> getHistoryByUsername(@PathVariable String username) {
+		return weatherService.getHistoryByUsername(username).map(ResponseEntity::ok);
 	}
 }
