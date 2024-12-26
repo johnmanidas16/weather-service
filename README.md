@@ -106,16 +106,16 @@ springdoc:
   use-management-port: false
 ```
 
-### Local Development
-# Build the project
+## Local Development
+## Build the project
 mvn clean install
 
-# Run the application
+## Run the application
 mvn spring-boot:run
 
-# Build Docker image
+## Build Docker image
 docker build -t weather-service .
 
-# Run with Docker Compose
+## Run with Docker Compose
 docker-compose up
 
