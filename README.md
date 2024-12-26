@@ -105,4 +105,16 @@ springdoc:
     prefix: /webjars
   use-management-port: false
 
+### Local Development
+# Build the project
+mvn clean install
+
+# Run the application
+mvn spring-boot:run
+
+# Build Docker image
+docker build -t weather-service .
+
+# Run with Docker Compose
+docker-compose up
 
