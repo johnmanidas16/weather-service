@@ -58,9 +58,9 @@ public class SecurityConfig {
 	        .csrf(csrf -> csrf.disable())
 	        .authorizeExchange(exchanges -> exchanges
 	            .pathMatchers(
-	                "/api/v3/api-docs/**",
-	                "/api/webjars/**", 
-	                "/api/swagger-ui/**",
+	                "/v3/api-docs/**",
+	                "/webjars/**", 
+	                "/swagger-ui/**",
 	                "/v1/api/auth/**"
 	            ).permitAll()
 	            .anyExchange().authenticated()
