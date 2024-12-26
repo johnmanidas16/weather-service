@@ -104,6 +104,7 @@ springdoc:
   webjars:
     prefix: /webjars
   use-management-port: false
+\```
 
 ### Local Development
 # Build the project
