@@ -113,9 +113,16 @@ mvn clean install
 ## Run the application
 mvn spring-boot:run
 
-## Build Docker image
-docker build -t weather-service .
+## Step to run Docker image
+# Build the Docker images
+docker-compose build
 
-## Run with Docker Compose
-docker-compose up
+# Start the services
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f app
+
+# To stop
+docker-compose down
 
