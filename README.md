@@ -66,7 +66,7 @@ mvn spring-boot:run
 - GET /api/weather/history/postal-code/{postalCode}
 - GET /api/weather/history/user/{username}
 
-### Application Properties
+## Application Properties
 Create `application.yml` in `src/main/resources`:
 
 ```yaml
@@ -104,7 +104,6 @@ springdoc:
   webjars:
     prefix: /webjars
   use-management-port: false
-\```
 
 ### Local Development
 # Build the project
