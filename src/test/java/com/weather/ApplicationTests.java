@@ -1,4 +1,4 @@
-package com.ecom.data.collection;
+package com.weather;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
