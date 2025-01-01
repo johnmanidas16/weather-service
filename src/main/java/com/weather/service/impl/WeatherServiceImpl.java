@@ -38,6 +38,7 @@ import reactor.core.publisher.Mono;
 @Service
 public class WeatherServiceImpl implements WeatherService {
 
+	public static final String REGEX = "^\\d{5}$";
 	private final WeatherServiceProperties weatherServiceProperties;
 	private final WebClientService webClientService;
 	private final WeatherDataRepository weatherDataRepository;
@@ -87,7 +88,7 @@ public class WeatherServiceImpl implements WeatherService {
 	private Mono<Void> validateRequest(WeatherRequest request) {
 		return Mono.just(request).filter(req -> req != null && req.getPostalCode() != null)
 				.switchIfEmpty(Mono.error(new ValidationException("Invalid request: missing postal code")))
-				.filter(req -> req.getPostalCode().matches("^\\d{5}$"))
+				.filter(req -> req.getPostalCode().matches(REGEX))
 				.switchIfEmpty(Mono.error(new ValidationException("Invalid postal code format"))).then();
 	}
 

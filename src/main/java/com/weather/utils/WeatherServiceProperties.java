@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @ConfigurationProperties(prefix = "weather.api")
-public class WeatherServiceProperties {
+public class  WeatherServiceProperties{
 
 	private String url;
 	private String appId;
