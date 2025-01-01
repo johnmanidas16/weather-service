@@ -31,27 +31,27 @@ public class WebClientService {
 	public static final int SECONDS = 1;
 
 	/**
-     * Creates a WebClient instance for a given base URL.
-     *
-     * @param baseUrl The base URL for the WebClient.
-     * @return A WebClient instance configured with the provided base URL.
-     */
+	 * Creates a WebClient instance for a given base URL.
+	 *
+	 * @param baseUrl The base URL for the WebClient.
+	 * @return A WebClient instance configured with the provided base URL.
+	 */
 	private WebClient webClientBuilder(String baseUrl) {
 		WebClient.Builder builder = WebClient.builder().baseUrl(baseUrl);
 		return builder.build();
 	}
 
 	/**
-     * Executes an HTTP request with retry mechanism.
-     *
-     * @param <T>          The type of the response object.
-     * @param baseUrl      The base URL of the external service.
-     * @param uri          The URI for the request.
-     * @param traceId      A trace ID for logging purposes.
-     * @param httpMethod   The HTTP method to be used (e.g., GET, POST).
-     * @param responseType The expected response type.
-     * @return A Mono containing the response object.
-     */
+	 * Executes an HTTP request with retry mechanism.
+	 *
+	 * @param <T>          The type of the response object.
+	 * @param baseUrl      The base URL of the external service.
+	 * @param uri          The URI for the request.
+	 * @param traceId      A trace ID for logging purposes.
+	 * @param httpMethod   The HTTP method to be used (e.g., GET, POST).
+	 * @param responseType The expected response type.
+	 * @return A Mono containing the response object.
+	 */
 	public <T> Mono<T> executeRequest(String baseUrl, String uri, String traceId, HttpMethod get,
 			Class<T> responseType) {
 		return Mono.defer(() -> {
@@ -68,11 +68,11 @@ public class WebClientService {
 	}
 
 	/**
-     * Filters the throwable to determine whether it should be retried.
-     *
-     * @param throwable The exception thrown during the request.
-     * @return True if the exception is retryable (e.g., UNAUTHORIZED), false otherwise.
-     */
+	 * Filters the throwable to determine whether it should be retried.
+	 *
+	 * @param throwable The exception thrown during the request.
+	 * @return True if the exception is retryable (e.g., UNAUTHORIZED), false otherwise.
+	 */
 	private boolean filterThrowable(Throwable throwable) {
 		if (throwable instanceof WebClientResponseException webClientException) {
 			return webClientException.getStatusCode() == HttpStatus.UNAUTHORIZED;
@@ -81,11 +81,11 @@ public class WebClientService {
 	}
 
 	/**
-     * Handles the logic when retries are exhausted.
-     *
-     * @param retrySignal The retry signal containing information about the failure.
-     * @return A Throwable to be thrown after retries are exhausted.
-     */
+	 * Handles the logic when retries are exhausted.
+	 *
+	 * @param retrySignal The retry signal containing information about the failure.
+	 * @return A Throwable to be thrown after retries are exhausted.
+	 */
 	private Throwable onRetryExhaustedThrow(Retry.RetrySignal retrySignal) {
 		Throwable failure = retrySignal.failure();
 		if (failure instanceof WebClientResponseException webClientException) {

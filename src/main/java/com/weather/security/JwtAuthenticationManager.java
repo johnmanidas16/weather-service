@@ -42,14 +42,14 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
 
 	/**
 	 * Authenticates the provided {@link Authentication} object.
-	 * 
-	 * <p>This method returns a {@link Mono} that emits the newly created 
-	 * {@link JwtAuthenticationToken} if the authentication is successful, 
+	 *
+	 * <p>This method returns a {@link Mono} that emits the newly created
+	 * {@link JwtAuthenticationToken} if the authentication is successful,
 	 * or an empty {@link Mono} otherwise.</p>
 	 *
 	 * @param authentication The authentication object to authenticate.
-	 * @return A {@link Mono} that emits the authenticated {@link JwtAuthenticationToken} 
-	 *         if successful, or an empty {@link Mono} otherwise.
+	 * @return A {@link Mono} that emits the authenticated {@link JwtAuthenticationToken}
+	 * if successful, or an empty {@link Mono} otherwise.
 	 */
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {

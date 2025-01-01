@@ -29,7 +29,7 @@ public class WeatherServiceUriUtil {
 	private static final String POSTAL_CODE = "POSTAL_CODE";
 	private static final String API_KEY = "API_KEY";
 
-	/**
+    /**
      * Prepares the URI for fetching geo-coordinates based on the postal code.
      *
      * @param postalCode The postal code for which the geo-coordinates are required.
