@@ -18,8 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class WeatherServiceUriUtil {
-	
-	private final WeatherServiceProperties weatherServiceProperties;
+
+    public static final String US = "US";
+    private final WeatherServiceProperties weatherServiceProperties;
 	
 	// Placeholder keys used in URI templates
     private static final String LON = "LON";
@@ -37,7 +38,7 @@ public class WeatherServiceUriUtil {
     public String prepareGeoCoordinatesUri(String postalCode) {
         return GEO_COORDINATES_URI
             .replace(POSTAL_CODE, postalCode)
-            .replace(COUNTRY_CODE, "US")
+            .replace(COUNTRY_CODE, US)
             .replace(API_KEY, weatherServiceProperties.getAppId());
     }
 

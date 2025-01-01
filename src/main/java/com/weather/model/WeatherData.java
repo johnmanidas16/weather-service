@@ -3,6 +3,7 @@ package com.weather.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import lombok.Builder;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -11,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Builder
 @Document(collection = "weather_data")
 @Data
 @NoArgsConstructor

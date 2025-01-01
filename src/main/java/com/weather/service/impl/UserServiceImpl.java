@@ -24,7 +24,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-	
+
+	public static final String ROLE_USER = "ROLE_USER";
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 
@@ -46,7 +47,7 @@ public class UserServiceImpl implements UserService {
 					newUser.setPassword(passwordEncoder.encode(request.getPassword()));
 					newUser.setPostalCode(request.getPostalCode());
 					newUser.setActive(true);
-					newUser.setRoles(Collections.singletonList("ROLE_USER"));
+					newUser.setRoles(Collections.singletonList(ROLE_USER));
 
 					return userRepository.save(newUser);
 				})).doOnSuccess(user -> log.info("Created new user: {}", user.getUsername()))
