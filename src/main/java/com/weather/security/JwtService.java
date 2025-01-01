@@ -37,25 +37,25 @@ public class JwtService {
 	private String secret;
 
 	/**
-     * Generates a JWT token for the given username.
-     *
-     * <p>This method creates a JWT token with the following claims:</p>
-     * <ul>
-     *     <li><b>typ</b>: Set to "BEARER" indicating the token type.</li>
-     *     <li><b>roles</b>: A list containing a single role "ROLE_USER".</li>
-     *     <li><b>iss</b>: Set to "WEATHER_SERVICE" identifying the issuer of the token.</li>
-     *     <li><b>aud</b>: Set to "WEATHER_API" specifying the intended audience for the token.</li>
-     *     <li><b>iat</b>: The issued at time of the token.</li>
-     *     <li><b>exp</b>: The expiration time of the token, set to 10 hours from the issued at time.</li>
-     *     <li><b>sub</b>: The username for which the token is generated.</li>
-     *     <li><b>jti</b>: A unique identifier for the token (JWT ID).</li>
-     * </ul>
-     *
-     * <p>The token is signed using the HMAC SHA-512 algorithm with the secret key.</p>
-     *
-     * @param username The username for which to generate the token.
-     * @return The generated JWT token as a String.
-     */
+	 * Generates a JWT token for the given username.
+	 *
+	 * <p>This method creates a JWT token with the following claims:</p>
+	 * <ul>
+	 *     <li><b>typ</b>: Set to "BEARER" indicating the token type.</li>
+	 *     <li><b>roles</b>: A list containing a single role "ROLE_USER".</li>
+	 *     <li><b>iss</b>: Set to "WEATHER_SERVICE" identifying the issuer of the token.</li>
+	 *     <li><b>aud</b>: Set to "WEATHER_API" specifying the intended audience for the token.</li>
+	 *     <li><b>iat</b>: The issued at time of the token.</li>
+	 *     <li><b>exp</b>: The expiration time of the token, set to 10 hours from the issued at time.</li>
+	 *     <li><b>sub</b>: The username for which the token is generated.</li>
+	 *     <li><b>jti</b>: A unique identifier for the token (JWT ID).</li>
+	 * </ul>
+	 *
+	 * <p>The token is signed using the HMAC SHA-512 algorithm with the secret key.</p>
+	 *
+	 * @param username The username for which to generate the token.
+	 * @return The generated JWT token as a String.
+	 */
 	public String generateToken(String username) {
 	    Map<String, Object> claims = new HashMap<>();
 	    claims.put(TYPE, BEARER);
@@ -75,19 +75,19 @@ public class JwtService {
 	}
 
 	/**
-     * Validates the given JWT token and extracts the username from the claims.
-     *
-     * <p>This method attempts to parse the JWT token using the configured secret key. 
-     * If the token is valid, it extracts the username from the subject claim. 
-     * Otherwise, it throws an {@link InvalidTokenException}.</p>
-     *
-     * <p>The returned {@link Mono} emits the username if the token is valid, 
-     * or emits an error containing an {@link InvalidTokenException} if the token is invalid.</p>
-     *
-     * @param token The JWT token to validate.
-     * @return A {@link Mono} that emits the username if the token is valid, 
-     *         or an error containing an {@link InvalidTokenException} otherwise.
-     */
+	 * Validates the given JWT token and extracts the username from the claims.
+	 *
+	 * <p>This method attempts to parse the JWT token using the configured secret key.
+	 * If the token is valid, it extracts the username from the subject claim.
+	 * Otherwise, it throws an {@link InvalidTokenException}.</p>
+	 *
+	 * <p>The returned {@link Mono} emits the username if the token is valid,
+	 * or emits an error containing an {@link InvalidTokenException} if the token is invalid.</p>
+	 *
+	 * @param token The JWT token to validate.
+	 * @return A {@link Mono} that emits the username if the token is valid,
+	 * or an error containing an {@link InvalidTokenException} otherwise.
+	 */
 	public Mono<String> validateTokenAndGetUsername(String token) {
 		try {
 			String username = Jwts.parserBuilder()

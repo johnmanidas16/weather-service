@@ -5,7 +5,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ErrorConstants {
 
-	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
+    public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
     public static final String VALIDATION_FAILED = "Validation failed";
     public static final String REQUEST_ERROR = "Request Error";
     public static final String SERVICE_ERROR = "Service Error";
