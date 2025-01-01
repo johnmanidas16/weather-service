@@ -45,14 +45,14 @@ public class WeatherServiceImpl implements WeatherService {
 	private final WeatherServiceUriUtil weatherServiceUriUtil;
 
 	/**
-     * Fetches weather data based on the given request.
-     * 
-     * @param request The {@link WeatherRequest} containing the postal code and username.
-     * @return A {@link Mono} emitting the saved {@link WeatherData}.
-     * @throws ValidationException If the request or postal code is invalid.
-     * @throws WeatherServiceException If fetching weather data from the external service fails.
-     * @throws DatabaseException If saving data to the database fails.
-     */
+	 * Fetches weather data based on the given request.
+	 *
+	 * @param request The {@link WeatherRequest} containing the postal code and username.
+	 * @return A {@link Mono} emitting the saved {@link WeatherData}.
+	 * @throws ValidationException     If the request or postal code is invalid.
+	 * @throws WeatherServiceException If fetching weather data from the external service fails.
+	 * @throws DatabaseException       If saving data to the database fails.
+	 */
 	public Mono<WeatherData> getWeatherData(WeatherRequest request) {
 		return validateRequest(request).then(getCoordinates(request)).flatMap(this::getWeatherDetails)
 				.map(weatherData -> {
@@ -67,11 +67,11 @@ public class WeatherServiceImpl implements WeatherService {
 	}
 
 	/**
-     * Maps metadata such as postal code, username, and request time to the weather data.
-     * 
-     * @param request The {@link WeatherRequest} containing metadata information.
-     * @param weatherData The {@link WeatherData} to be updated.
-     */
+	 * Maps metadata such as postal code, username, and request time to the weather data.
+	 *
+	 * @param request     The {@link WeatherRequest} containing metadata information.
+	 * @param weatherData The {@link WeatherData} to be updated.
+	 */
 	private void mapMetaData(WeatherRequest request, WeatherData weatherData) {
 		weatherData.setPostalCode(request.getPostalCode());
 		weatherData.setUsername(request.getUsername());
@@ -79,12 +79,12 @@ public class WeatherServiceImpl implements WeatherService {
 	}
 
 	/**
-     * Validates the incoming {@link WeatherRequest}.
-     * 
-     * @param request The request to validate.
-     * @return A {@link Mono<Void>} indicating completion.
-     * @throws ValidationException If the request is invalid or the postal code format is incorrect.
-     */
+	 * Validates the incoming {@link WeatherRequest}.
+	 *
+	 * @param request The request to validate.
+	 * @return A {@link Mono<Void>} indicating completion.
+	 * @throws ValidationException If the request is invalid or the postal code format is incorrect.
+	 */
 	private Mono<Void> validateRequest(WeatherRequest request) {
 		return Mono.just(request).filter(req -> req != null && req.getPostalCode() != null)
 				.switchIfEmpty(Mono.error(new ValidationException("Invalid request: missing postal code")))
@@ -93,13 +93,13 @@ public class WeatherServiceImpl implements WeatherService {
 	}
 
 	/**
-     * Retrieves geographic coordinates based on the postal code in the request.
-     * 
-     * @param request The {@link WeatherRequest} containing the postal code.
-     * @return A {@link Mono<Coordinates>} with the geographic coordinates.
-     * @throws ResourceNotFoundException If the postal code is not found.
-     * @throws WeatherServiceException If an error occurs while fetching coordinates.
-     */
+	 * Retrieves geographic coordinates based on the postal code in the request.
+	 *
+	 * @param request The {@link WeatherRequest} containing the postal code.
+	 * @return A {@link Mono<Coordinates>} with the geographic coordinates.
+	 * @throws ResourceNotFoundException If the postal code is not found.
+	 * @throws WeatherServiceException   If an error occurs while fetching coordinates.
+	 */
 	private Mono<Coordinates> getCoordinates(WeatherRequest request) {
 		return webClientService.executeRequest(weatherServiceProperties.getUrl(),
 				weatherServiceUriUtil.prepareGeoCoordinatesUri(request.getPostalCode()), "", HttpMethod.GET,
@@ -113,13 +113,13 @@ public class WeatherServiceImpl implements WeatherService {
 	}
 
 	/**
-     * Fetches weather details for the given coordinates.
-     * 
-     * @param coordinates The {@link Coordinates} of the location.
-     * @return A {@link Mono<WeatherData>} containing weather information.
-     * @throws ResourceNotFoundException If the location is not found.
-     * @throws WeatherServiceException If an error occurs while fetching weather data.
-     */
+	 * Fetches weather details for the given coordinates.
+	 *
+	 * @param coordinates The {@link Coordinates} of the location.
+	 * @return A {@link Mono<WeatherData>} containing weather information.
+	 * @throws ResourceNotFoundException If the location is not found.
+	 * @throws WeatherServiceException   If an error occurs while fetching weather data.
+	 */
 	private Mono<WeatherData> getWeatherDetails(Coordinates coordinates) {
 		return webClientService
 				.executeRequest(weatherServiceProperties.getUrl(),
@@ -134,11 +134,11 @@ public class WeatherServiceImpl implements WeatherService {
 	}
 
 	/**
-     * Retrieves weather history for a specific postal code.
-     * 
-     * @param postalCode The postal code to search for.
-     * @return A {@link Flux<WeatherData>} emitting historical weather data.
-     */
+	 * Retrieves weather history for a specific postal code.
+	 *
+	 * @param postalCode The postal code to search for.
+	 * @return A {@link Flux<WeatherData>} emitting historical weather data.
+	 */
 	@Override
 	public Mono<WeatherResponse> getHistoryByPostalCode(String postalCode) {
 	    return weatherDataRepository.findByPostalCodeOrderByRequestTimeDesc(postalCode)
@@ -150,11 +150,11 @@ public class WeatherServiceImpl implements WeatherService {
 	}
 
 	/**
-     * Retrieves weather history for a specific username.
-     * 
-     * @param username The username to search for.
-     * @return A {@link Flux<WeatherData>} emitting historical weather data.
-     */
+	 * Retrieves weather history for a specific username.
+	 *
+	 * @param username The username to search for.
+	 * @return A {@link Flux<WeatherData>} emitting historical weather data.
+	 */
 	@Override
 	public Mono<WeatherResponse> getHistoryByUsername(String username) {
 		return weatherDataRepository.findByUsernameOrderByRequestTimeDesc(username)
