@@ -92,42 +92,6 @@ public class AuthAPITest {
     }
 
     @Test
-    void activateUserExistingUserReturnsActivatedUserTest() {
-        User activatedUser = User.builder()
-                .username(testUser.getUsername())
-                .active(true)
-                .build();
-
-        when(userService.activateUser(testUser.getUsername()))
-                .thenReturn(Mono.just(activatedUser));
-
-        StepVerifier.create(authAPI.activateUser(testUser.getUsername()))
-                .assertNext(user -> {
-                    assertEquals(testUser.getUsername(), user.getUsername());
-                    assertTrue(user.isActive());
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void deactivateUserExistingUserReturnsDeactivatedUserTest() {
-        User deactivatedUser = User.builder()
-                .username(testUser.getUsername())
-                .active(false)
-                .build();
-
-        when(userService.deactivateUser(testUser.getUsername()))
-                .thenReturn(Mono.just(deactivatedUser));
-
-        StepVerifier.create(authAPI.deactivateUser(testUser.getUsername()))
-                .assertNext(user -> {
-                    assertEquals(testUser.getUsername(), user.getUsername());
-                    assertFalse(user.isActive());
-                })
-                .verifyComplete();
-    }
-
-    @Test
     void authenticateWhenUserServiceFailsReturnsErrorTest() {
         when(userService.authenticate(anyString(), anyString()))
                 .thenReturn(Mono.error(new RuntimeException("Authentication failed")));

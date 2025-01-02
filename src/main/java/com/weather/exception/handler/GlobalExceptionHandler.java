@@ -1,11 +1,14 @@
 package com.weather.exception.handler;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
+import com.weather.exception.*;
+import com.weather.utils.ErrorConstants;
+import lombok.Builder;
+import lombok.Getter;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
@@ -14,18 +17,12 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.weather.dto.ApiError;
 import com.weather.dto.ValidationError;
-import com.weather.exception.DatabaseException;
-import com.weather.exception.InvalidCredentialsException;
-import com.weather.exception.InvalidTokenException;
-import com.weather.exception.ResourceNotFoundException;
-import com.weather.exception.WeatherServiceException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,87 +85,110 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
-    
+
     private final ObjectMapper objectMapper;
-    private static final String UNEXPECTED_ERROR = "An unexpected error occurred";
-    
+
+    @Getter
+    @Builder
+    private static class ErrorDetails {
+        private final HttpStatus status;
+        private final String message;
+        private final String error;
+        private final List<ValidationError> validationErrors;
+    }
+
+    // Registry of exception handlers
+    private final Map<Class<? extends Throwable>, Function<Throwable, ErrorDetails>> errorHandlers = createErrorHandlers();
+
+    private Map<Class<? extends Throwable>, Function<Throwable, ErrorDetails>> createErrorHandlers() {
+        Map<Class<? extends Throwable>, Function<Throwable, ErrorDetails>> handlers = new HashMap<>();
+
+        handlers.put(InvalidTokenException.class, ex -> ErrorDetails.builder()
+                .status(HttpStatus.UNAUTHORIZED)
+                .message(ex.getMessage())
+                .error(ErrorConstants.AUTHENTICATION_FAILED)
+                .validationErrors(Collections.emptyList())
+                .build());
+
+        handlers.put(InvalidCredentialsException.class, ex -> ErrorDetails.builder()
+                .status(HttpStatus.UNAUTHORIZED)
+                .message(ex.getMessage())
+                .error(ErrorConstants.AUTHENTICATION_FAILED)
+                .validationErrors(Collections.emptyList())
+                .build());
+
+        handlers.put(UnauthorizedAccessException.class, ex -> ErrorDetails.builder()
+                .status(HttpStatus.FORBIDDEN)
+                .message(ex.getMessage())
+                .error(ErrorConstants.AUTHORIZATION_FAILED)
+                .validationErrors(Collections.emptyList())
+                .build());
+
+        handlers.put(ValidationException.class, ex -> ErrorDetails.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .message(ex.getMessage())
+                .error(ErrorConstants.INVALID_REQUEST)
+                .validationErrors(Collections.emptyList())
+                .build());
+
+        handlers.put(ResourceNotFoundException.class, ex -> ErrorDetails.builder()
+                .status(HttpStatus.NOT_FOUND)
+                .message(ex.getMessage())
+                .error(ErrorConstants.RESOURCE_NOT_FOUND)
+                .validationErrors(Collections.emptyList())
+                .build());
+
+        handlers.put(WebClientResponseException.class, ex -> {
+            WebClientResponseException wcEx = (WebClientResponseException) ex;
+            return ErrorDetails.builder()
+                    .status(HttpStatus.valueOf(wcEx.getStatusCode().value()))
+                    .message(wcEx.getMessage())
+                    .error(ErrorConstants.EXTERNAL_SERVICE_ERROR)
+                    .validationErrors(Collections.emptyList())
+                    .build();
+        });
+
+        // Service Errors
+        Stream.of(DatabaseException.class, WeatherServiceException.class)
+                .forEach(exceptionClass -> handlers.put(exceptionClass, ex -> ErrorDetails.builder()
+                        .status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .message(ErrorConstants.SERVICE_TEMPORARILY_UNAVAILABLE)
+                        .error(ErrorConstants.SERVICE_ERROR)
+                        .validationErrors(Collections.emptyList())
+                        .build()));
+
+        return Collections.unmodifiableMap(handlers);
+    }
+
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
-        // Set default status code
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        String message = UNEXPECTED_ERROR;
-        String error = "Internal Server Error";
-        List<ValidationError> validationErrors = Collections.emptyList();
+        ErrorDetails errorDetails = errorHandlers.entrySet().stream()
+                .filter(entry -> entry.getKey().isInstance(ex))
+                .findFirst()
+                .map(entry -> entry.getValue().apply(ex))
+                .orElseGet(() -> getDefaultErrorDetails(ex));
 
-        // Determine the appropriate status and message based on exception type
-        if (ex instanceof InvalidTokenException || ex instanceof InvalidCredentialsException) {
-            status = HttpStatus.UNAUTHORIZED;
-            message = ex.getMessage();
-            error = "Authentication Failed";
-        } 
-        else if (ex instanceof WebExchangeBindException) {
-            status = HttpStatus.BAD_REQUEST;
-            message = "Validation failed";
-            error = "Invalid Request";
-            validationErrors = extractValidationErrors((WebExchangeBindException) ex);
-        }
-        else if (ex instanceof ResourceNotFoundException) {
-            status = HttpStatus.NOT_FOUND;
-            message = ex.getMessage();
-            error = "Resource Not Found";
-        }
-        else if (ex instanceof WebClientResponseException) {
-            WebClientResponseException wcEx = (WebClientResponseException) ex;
-            status = HttpStatus.valueOf(wcEx.getStatusCode().value());
-            message = wcEx.getMessage();
-            error = "External Service Error";
-        }
-        else if (ex instanceof DatabaseException || ex instanceof WeatherServiceException) {
-            status = HttpStatus.SERVICE_UNAVAILABLE;
-            message = "Service temporarily unavailable";
-            error = "Service Error";
-        }
-        else if (ex instanceof ResponseStatusException) {
-            ResponseStatusException responseError = (ResponseStatusException) ex;
-            status = HttpStatus.valueOf(responseError.getStatusCode().value());  // Convert HttpStatusCode to HttpStatus
-            message = responseError.getReason();
-            error = "Request Error";
-        }
-       
-        // Log the error
-        logError(error, ex);
-
-        // Build and return the error response
-        return writeErrorResponse(exchange, buildErrorResponse(
-            status,
-            error,
-            message,
-            exchange.getRequest().getPath().value(),
-            validationErrors
-        ));
+        logError(errorDetails.getError(), ex);
+        return writeErrorResponse(exchange, buildApiError(exchange, errorDetails));
     }
 
-    private List<ValidationError> extractValidationErrors(WebExchangeBindException ex) {
-        return ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> ValidationError.builder()
-                        .field(error.getField())
-                        .rejectedValue(error.getRejectedValue())
-                        .message(error.getDefaultMessage())
-                        .build())
-                .collect(Collectors.toList());
+    private ErrorDetails getDefaultErrorDetails(Throwable ex) {
+        return ErrorDetails.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .message(ErrorConstants.UNEXPECTED_ERROR)
+                .error(ErrorConstants.INTERNAL_SERVER_ERROR)
+                .validationErrors(Collections.emptyList())
+                .build();
     }
 
-    private ApiError buildErrorResponse(HttpStatus status, String error, String message, 
-                                     String path, List<ValidationError> validationErrors) {
+    private ApiError buildApiError(ServerWebExchange exchange, ErrorDetails errorDetails) {
         return ApiError.builder()
                 .timestamp(LocalDateTime.now().toString())
-                .status(status.value())
-                .error(error)
-                .message(message)
-                .path(path)
-                .errors(validationErrors)
+                .status(errorDetails.getStatus().value())
+                .error(errorDetails.getError())
+                .message(errorDetails.getMessage())
+                .path(exchange.getRequest().getPath().value())
+                .errors(errorDetails.getValidationErrors())
                 .traceId(UUID.randomUUID().toString())
                 .build();
     }

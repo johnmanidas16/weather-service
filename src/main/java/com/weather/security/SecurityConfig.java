@@ -61,7 +61,7 @@ public class SecurityConfig {
 	                "/v3/api-docs/**",
 	                "/webjars/**", 
 	                "/swagger-ui/**",
-	                "/v1/api/auth/**"
+	                "/v1/api/auth/register", "/v1/api/auth/token"
 	            ).permitAll()
 	            .anyExchange().authenticated()
 	        )

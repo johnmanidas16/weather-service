@@ -5,8 +5,12 @@ package com.weather.service.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.weather.exception.*;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -15,10 +19,6 @@ import com.weather.dto.Coordinates;
 import com.weather.dto.WeatherInfo;
 import com.weather.dto.WeatherRequest;
 import com.weather.dto.WeatherResponse;
-import com.weather.exception.DatabaseException;
-import com.weather.exception.ResourceNotFoundException;
-import com.weather.exception.ValidationException;
-import com.weather.exception.WeatherServiceException;
 import com.weather.model.WeatherData;
 import com.weather.repository.WeatherDataRepository;
 import com.weather.utils.WeatherServiceProperties;
@@ -54,7 +54,10 @@ public class WeatherServiceImpl implements WeatherService {
 	 * @throws DatabaseException       If saving data to the database fails.
 	 */
 	public Mono<WeatherData> getWeatherData(WeatherRequest request) {
-		return validateRequest(request).then(getCoordinates(request)).flatMap(this::getWeatherDetails)
+		return validateUserAccess(request)
+				.then(validateRequest(request))
+				.then(getCoordinates(request))
+				.flatMap(this::getWeatherDetails)
 				.map(weatherData -> {
 					mapMetaData(request, weatherData);
 					return weatherData;
@@ -65,6 +68,21 @@ public class WeatherServiceImpl implements WeatherService {
 						ex -> new DatabaseException("Database error while saving weather data", ex))
 				.doOnError(ex -> log.error("Error processing weather request: {}", ex.getMessage()));
 	}
+
+	private Mono<Void> validateUserAccess(WeatherRequest request) {
+		return ReactiveSecurityContextHolder.getContext()
+				.map(SecurityContext::getAuthentication)
+				.map(Authentication::getName)
+				.flatMap(tokenUsername -> {
+					if (!tokenUsername.equals(request.getUsername())) {
+						return Mono.error(new UnauthorizedAccessException(
+								"Access denied. You can only access your own weather data."
+						));
+					}
+					return Mono.empty();
+				});
+	}
+
 
 	/**
 	 * Maps metadata such as postal code, username, and request time to the weather data.

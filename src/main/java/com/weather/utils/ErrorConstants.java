@@ -15,4 +15,5 @@ public class ErrorConstants {
     public static final String INVALID_REQUEST = "Invalid Request";
     public static final String AUTHENTICATION_FAILED = "Authentication Failed";
     public static final String UNEXPECTED_ERROR = "An unexpected error occurred";
+    public static final String AUTHORIZATION_FAILED = "Authorization Failed";
 }
