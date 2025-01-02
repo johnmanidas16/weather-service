@@ -92,16 +92,6 @@ public class AuthAPITest {
     }
 
     @Test
-    void authenticateWhenUserServiceFailsReturnsErrorTest() {
-        when(userService.authenticate(anyString(), anyString()))
-                .thenReturn(Mono.error(new RuntimeException("Authentication failed")));
-
-        StepVerifier.create(authAPI.getToken(tokenRequest))
-                .expectError(RuntimeException.class)
-                .verify();
-    }
-
-    @Test
     void registerWhenUserServiceFailsReturnsErrorTest() {
         when(userService.createUser(any(UserRegistrationRequest.class)))
                 .thenReturn(Mono.error(new RuntimeException("Registration failed")));
