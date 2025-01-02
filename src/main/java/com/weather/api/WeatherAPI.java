@@ -1,5 +1,7 @@
 package com.weather.api;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +32,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @RestController
 @RequestMapping("/v1/api/weather")
+@SecurityRequirement(name = "bearer-jwt")
+@Tag(name = "Weather API", description = "Weather related operations")
 @RequiredArgsConstructor
 public class WeatherAPI {
 	

@@ -1,8 +1,7 @@
 package com.weather.api;
 
-import org.springframework.web.bind.annotation.PathVariable;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -10,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.weather.dto.AuthResponse;
 import com.weather.dto.TokenRequest;
 import com.weather.dto.UserRegistrationRequest;
-import com.weather.model.User;
 import com.weather.security.JwtService;
 import com.weather.service.impl.UserService;
 
@@ -30,6 +28,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/v1/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Authentication", description = "Authentication and user management operations")
 public class AuthAPI {
 
 	private final UserService userService;
@@ -80,39 +79,5 @@ public class AuthAPI {
 				.token(jwtService.generateToken(user.getUsername()))
 				.username(user.getUsername())
 				.build());
-	}
-
-	/**
-	 * Activates a user account by their username.
-	 *
-	 * @param username The username of the user to activate.
-	 * @return A {@link Mono} emitting the updated {@link User} after activation.
-	 */
-	@Operation(summary = "Activate a user", description = "Activates a user account by username.")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "User activated successfully", 
-					content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
-			@ApiResponse(responseCode = "404", description = "User not found", content = @Content),
-			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content) })
-	@PutMapping("/users/{username}/activate")
-	public Mono<User> activateUser(@PathVariable String username) {
-		return userService.activateUser(username);
-	}
-
-	/**
-	 * Deactivates a user account by their username.
-	 *
-	 * @param username The username of the user to deactivate.
-	 * @return A {@link Mono} emitting the updated {@link User} after deactivation.
-	 */
-	@Operation(summary = "Deactivate a user", description = "Deactivates a user account by username.")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "User deactivated successfully", 
-					content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
-			@ApiResponse(responseCode = "404", description = "User not found", content = @Content),
-			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content) })
-	@PutMapping("/users/{username}/deactivate")
-	public Mono<User> deactivateUser(@PathVariable String username) {
-		return userService.deactivateUser(username);
 	}
 }
