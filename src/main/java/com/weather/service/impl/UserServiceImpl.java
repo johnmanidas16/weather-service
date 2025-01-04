@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import static com.weather.utils.ErrorConstants.*;
+
 /**
  * Implementation of the {@link UserService} interface.
  * Provides services for user registration, authentication, and account management.
@@ -26,6 +28,7 @@ import reactor.core.publisher.Mono;
 public class UserServiceImpl implements UserService {
 
 	public static final String ROLE_USER = "ROLE_USER";
+
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 
@@ -40,18 +43,30 @@ public class UserServiceImpl implements UserService {
 	public Mono<User> createUser(UserRegistrationRequest request) {
 		return userRepository.findByUsername(request.getUsername())
 				.flatMap(existingUser -> Mono.<User>error(
-						new UserAlreadyExistsException("Username already exists: " + request.getUsername())))
+						new UserAlreadyExistsException(USERNAME_ALREADY_EXISTS + request.getUsername())))
 				.switchIfEmpty(Mono.defer(() -> {
-					User newUser = new User();
-					newUser.setUsername(request.getUsername());
-					newUser.setPassword(passwordEncoder.encode(request.getPassword()));
-					newUser.setPostalCode(request.getPostalCode());
-					newUser.setActive(true);
-					newUser.setRoles(Collections.singletonList(ROLE_USER));
-
+					User newUser = getUserDetails(request);
 					return userRepository.save(newUser);
 				})).doOnSuccess(user -> log.info("Created new user: {}", user.getUsername()))
 				.doOnError(error -> log.error("Error creating user: {}", error.getMessage()));
+	}
+
+	/**
+	 * Creates a new User entity from the registration request data.
+	 * The password is encoded using the configured password encoder,
+	 * and the user is set as active with default USER role.
+	 *
+	 * @param request The {@link UserRegistrationRequest} containing user registration details
+	 * @return {@link User} entity with encoded password and default settings
+	 */
+	private User getUserDetails(UserRegistrationRequest request) {
+		User newUser = new User();
+		newUser.setUsername(request.getUsername());
+		newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+		newUser.setPostalCode(request.getPostalCode());
+		newUser.setActive(true);
+		newUser.setRoles(Collections.singletonList(ROLE_USER));
+		return newUser;
 	}
 
 	/**
@@ -66,7 +81,7 @@ public class UserServiceImpl implements UserService {
 	public Mono<User> authenticate(String username, String password) {
 		return userRepository.findByUsername(username)
 	            .filter(user -> passwordEncoder.matches(password, user.getPassword()))
-	            .switchIfEmpty(Mono.error(new InvalidCredentialsException("Invalid username or password")));
+	            .switchIfEmpty(Mono.error(new InvalidCredentialsException(INVALID_USERNAME_OR_PASSWORD)));
 	}
 
 	/**
@@ -79,7 +94,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Mono<User> findByUsername(String username) {
 		return userRepository.findByUsername(username)
-				.switchIfEmpty(Mono.error(new UserNotFoundException("User not found: " + username)));
+				.switchIfEmpty(Mono.error(new UserNotFoundException(USER_NOT_FOUND + username)));
 	}
 
 	/**
@@ -92,7 +107,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Mono<User> activateUser(String username) {
 		return userRepository.findByUsername(username)
-				.switchIfEmpty(Mono.error(new UserNotFoundException("User not found: " + username))).flatMap(user -> {
+				.switchIfEmpty(Mono.error(new UserNotFoundException(USER_NOT_FOUND + username))).flatMap(user -> {
 					user.setActive(true);
 					return userRepository.save(user);
 				}).doOnSuccess(user -> log.info("Activated user: {}", username));
@@ -108,7 +123,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Mono<User> deactivateUser(String username) {
 		return userRepository.findByUsername(username)
-				.switchIfEmpty(Mono.error(new UserNotFoundException("User not found: " + username))).flatMap(user -> {
+				.switchIfEmpty(Mono.error(new UserNotFoundException(USER_NOT_FOUND + username))).flatMap(user -> {
 					user.setActive(false);
 					return userRepository.save(user);
 				}).doOnSuccess(user -> log.info("Deactivated user: {}", username));

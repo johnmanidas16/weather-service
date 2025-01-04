@@ -29,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import static com.weather.utils.ErrorConstants.*;
+
 /**
  * Implementation of the {@link WeatherService} interface.
  * Provides weather data retrieval and history services.
@@ -65,10 +67,18 @@ public class WeatherServiceImpl implements WeatherService {
 				.onErrorMap(WebClientResponseException.class,
 						ex -> new WeatherServiceException("Failed to fetch weather data: " + ex.getMessage(), ex))
 				.onErrorMap(MongoException.class,
-						ex -> new DatabaseException("Database error while saving weather data", ex))
+						ex -> new DatabaseException(DATABASE_ERROR_WHILE_SAVING_WEATHER_DATA, ex))
 				.doOnError(ex -> log.error("Error processing weather request: {}", ex.getMessage()));
 	}
 
+	/**
+	 * Validates that the user making the request is accessing their own weather data.
+	 * (obtained from the security context) with the username provided in the weather request.
+	 * This ensures that users can only access their own weather data, implementing
+	 *
+	 * @param request The {@link WeatherRequest} containing metadata information.
+	 *                throws an {@link UnauthorizedAccessException} if they don't match
+	 */
 	private Mono<Void> validateUserAccess(WeatherRequest request) {
 		return ReactiveSecurityContextHolder.getContext()
 				.map(SecurityContext::getAuthentication)
@@ -76,7 +86,7 @@ public class WeatherServiceImpl implements WeatherService {
 				.flatMap(tokenUsername -> {
 					if (!tokenUsername.equals(request.getUsername())) {
 						return Mono.error(new UnauthorizedAccessException(
-								"Access denied. You can only access your own weather data."
+								ACCESS_DENIED_YOU_CAN_ONLY_ACCESS_YOUR_OWN_WEATHER_DATA
 						));
 					}
 					return Mono.empty();
@@ -105,9 +115,11 @@ public class WeatherServiceImpl implements WeatherService {
 	 */
 	private Mono<Void> validateRequest(WeatherRequest request) {
 		return Mono.just(request).filter(req -> req != null && req.getPostalCode() != null)
-				.switchIfEmpty(Mono.error(new ValidationException("Invalid request: missing postal code")))
-				.filter(req -> req.getPostalCode().matches(REGEX))
-				.switchIfEmpty(Mono.error(new ValidationException("Invalid postal code format"))).then();
+				.switchIfEmpty(Mono.error(new ValidationException(INVALID_REQUEST_MISSING_POSTAL_CODE)))
+				.filter(req -> req.getPostalCode()
+						.matches(REGEX))
+				.switchIfEmpty(Mono.error(new ValidationException(INVALID_POSTAL_CODE_FORMAT)))
+				.then();
 	}
 
 	/**
@@ -124,9 +136,9 @@ public class WeatherServiceImpl implements WeatherService {
 				Coordinates.class).onErrorMap(WebClientResponseException.class, ex -> {
 					if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
 						return new ResourceNotFoundException(
-								"Location not found for postal code: " , request.getPostalCode());
+								LOCATION_NOT_FOUND_FOR_POSTAL_CODE, request.getPostalCode());
 					}
-					return new WeatherServiceException("Error fetching coordinates", ex);
+					return new WeatherServiceException(ERROR_FETCHING_COORDINATES, ex);
 				});
 	}
 
@@ -145,9 +157,9 @@ public class WeatherServiceImpl implements WeatherService {
 				.onErrorMap(WebClientResponseException.class, ex -> {
 					if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
 						return new ResourceNotFoundException(
-								"Location not found for postal code: " , coordinates.getCountry());
+								LOCATION_NOT_FOUND_FOR_POSTAL_CODE , coordinates.getCountry());
 					}
-					return new WeatherServiceException("Error fetching coordinates", ex);
+					return new WeatherServiceException(ERROR_FETCHING_COORDINATES, ex);
 				});
 	}
 
@@ -182,6 +194,14 @@ public class WeatherServiceImpl implements WeatherService {
 				});
 	}
 
+	/**
+	 * Maps weather data to a response format including current and historical weather information.
+	 *
+	 * @param postalCode  The postal code of the location
+	 * @param username    The username of the requesting user
+	 * @param historyList List of historical {@link WeatherInfo} entries
+	 * @return {@link WeatherResponse} containing current and historical weather data
+	 */
 	private WeatherResponse mapWeatherResponse(String postalCode, String username, List<WeatherInfo> historyList) {
 		WeatherResponse response = new WeatherResponse();
 		response.setPostalCode(postalCode);
@@ -197,6 +217,12 @@ public class WeatherServiceImpl implements WeatherService {
 		return response;
 	}
 
+	/**
+	 * Converts raw weather data into a simplified weather information format.
+	 *
+	 * @param weatherData The {@link WeatherData} containing raw weather information
+	 * @return {@link WeatherInfo} containing formatted weather details
+	 */
 	private WeatherInfo convertToWeatherInfo(WeatherData weatherData) {
 		return WeatherInfo.builder()
 				.timestamp(weatherData.getRequestTime())
