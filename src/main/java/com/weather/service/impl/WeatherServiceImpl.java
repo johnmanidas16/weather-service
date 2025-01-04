@@ -71,6 +71,21 @@ public class WeatherServiceImpl implements WeatherService {
 				.doOnError(ex -> log.error("Error processing weather request: {}", ex.getMessage()));
 	}
 
+	private Mono<Void> validateUserAccess(WeatherRequest request) {
+		return ReactiveSecurityContextHolder.getContext()
+				.map(SecurityContext::getAuthentication)
+				.map(Authentication::getName)
+				.flatMap(tokenUsername -> {
+					if (!tokenUsername.equals(request.getUsername())) {
+						return Mono.error(new UnauthorizedAccessException(
+								"Access denied. You can only access your own weather data."
+						));
+					}
+					return Mono.empty();
+				});
+	}
+
+
 	/**
 	 * Validates that the user making the request is accessing their own weather data.
 	 * (obtained from the security context) with the username provided in the weather request.
