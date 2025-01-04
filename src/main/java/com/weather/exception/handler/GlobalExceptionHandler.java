@@ -131,7 +131,14 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
                 .validationErrors(Collections.emptyList())
                 .build());
 
-        handlers.put(ResourceNotFoundException.class, ex -> ErrorDetails.builder()
+        handlers.put(ResourceNotFoundException.class,  ex -> ErrorDetails.builder()
+                .status(HttpStatus.NOT_FOUND)
+                .message(ex.getMessage())
+                .error(ErrorConstants.RESOURCE_NOT_FOUND)
+                .validationErrors(Collections.emptyList())
+                .build());
+
+        handlers.put(UserNotFoundException.class,  ex -> ErrorDetails.builder()
                 .status(HttpStatus.NOT_FOUND)
                 .message(ex.getMessage())
                 .error(ErrorConstants.RESOURCE_NOT_FOUND)
